@@ -42,6 +42,11 @@ class Command(BaseCommand):
                 "from_string": "graph.facebook.com/v21.0/",
                 "to_string": "graph.facebook.com/v25.0/",
             },
+            "whatsapp-api-version-update": {
+                "template_id": "template-whatsapp",
+                "from_string": "empty(inputs.api_version) ? 'v21.0'",
+                "to_string": "empty(inputs.api_version) ? 'v22.0'",
+            },
         }
 
         if not replace_key or replace_key not in replaceOptions:
