@@ -81,6 +81,28 @@ class TestUpdateHogFunctionCode(BaseTest):
                 enabled=True,
             )
 
+            # WhatsApp destination with old default API version
+            self.whatsapp_function1 = HogFunction.objects.create(
+                team=self.team,
+                name="WhatsApp Function 1",
+                type="destination",
+                template_id="template-whatsapp",
+                description="Test WhatsApp Function 1",
+                hog="let apiVersion := empty(inputs.api_version) ? 'v21.0' : inputs.api_version\nreturn event;",
+                enabled=True,
+            )
+
+            # WhatsApp destination already on the new default API version (should not be updated)
+            self.whatsapp_function2 = HogFunction.objects.create(
+                team=self.team,
+                name="WhatsApp Function 2",
+                type="destination",
+                template_id="template-whatsapp",
+                description="Test WhatsApp Function 2",
+                hog="let apiVersion := empty(inputs.api_version) ? 'v22.0' : inputs.api_version\nreturn event;",
+                enabled=True,
+            )
+
     @patch("posthog.management.commands.update_hog_function_code.compile_hog")
     def test_update_linkedin_api_version_dry_run(self, mock_compile_hog):
         """Test dry run mode - should show what would be updated without making changes."""
@@ -146,6 +168,31 @@ class TestUpdateHogFunctionCode(BaseTest):
         # Check that the function already on the new version was left untouched
         self.meta_ads_function2.refresh_from_db()
         assert "graph.facebook.com/v25.0/" in self.meta_ads_function2.hog
+
+        output = out.getvalue()
+        self.assertIn("Found 2 destinations to process", output)
+        self.assertIn("Updated: 1", output)
+        self.assertIn("Update completed", output)
+
+    @patch("posthog.management.commands.update_hog_function_code.compile_hog")
+    def test_update_whatsapp_api_version_actual_update(self, mock_compile_hog):
+        """Test actual update - should bump the WhatsApp default API version in persisted code."""
+        mock_compile_hog.return_value = "compiled_bytecode"
+
+        out = StringIO()
+        call_command("update_hog_function_code", replace_key="whatsapp-api-version-update", stdout=out)
+
+        # Should have compiled and saved only the function that needed updating
+        assert mock_compile_hog.call_count == 1
+
+        # Check that the function with the old default was updated
+        self.whatsapp_function1.refresh_from_db()
+        assert "empty(inputs.api_version) ? 'v21.0'" not in self.whatsapp_function1.hog
+        assert "empty(inputs.api_version) ? 'v22.0'" in self.whatsapp_function1.hog
+
+        # Check that the function already on the new default was left untouched
+        self.whatsapp_function2.refresh_from_db()
+        assert "empty(inputs.api_version) ? 'v22.0'" in self.whatsapp_function2.hog
 
         output = out.getvalue()
         self.assertIn("Found 2 destinations to process", output)

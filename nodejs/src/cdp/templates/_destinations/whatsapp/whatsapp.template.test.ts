@@ -113,7 +113,7 @@ describe('whatsapp template', () => {
 
         expect(response.error).toBeUndefined()
         expect((response.invocation.queueParameters as { url: string }).url).toEqual(
-            'https://graph.facebook.com/v21.0/987654321/messages'
+            'https://graph.facebook.com/v22.0/987654321/messages'
         )
     })
 

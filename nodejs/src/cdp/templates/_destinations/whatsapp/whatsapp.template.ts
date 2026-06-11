@@ -15,7 +15,7 @@ let toNumber := inputs.to_number
 let messageType := inputs.message_type
 let phoneNumberId := inputs.phone_number_id
 let accessToken := inputs.access_token
-let apiVersion := empty(inputs.api_version) ? 'v21.0' : inputs.api_version
+let apiVersion := empty(inputs.api_version) ? 'v22.0' : inputs.api_version
 
 if (not toNumber) {
     throw Error('Recipient phone number is required')
@@ -106,8 +106,8 @@ if (inputs.debug) {
             key: 'api_version',
             type: 'string',
             label: 'Graph API version',
-            description: 'The Meta Graph API version to call. Defaults to v21.0.',
-            default: 'v21.0',
+            description: 'The Meta Graph API version to call. Defaults to v22.0.',
+            default: 'v22.0',
             secret: false,
             required: false,
         },
